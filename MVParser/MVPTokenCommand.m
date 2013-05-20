@@ -2,7 +2,7 @@
 //  MVPTokenCommand.m
 //  MVParser
 //
-x
+
 #import "MVPTools.h"
 #import "MVPInterpreter.h"
 #import "MVPLanguage.h"
@@ -15,6 +15,8 @@ x
 #pragma mark Интерпретация
 
 - (MVPToken *) interpreter: (MVPInterpreter *) interpreter readFromReader: (MVPReader *) reader {
+    [reader readRegExArray: interpreter.language.whiteSpaces options: 0];
+
     NSString * value = [reader readRegEx: @"[_a-zA-Z][_a-zA-Z0-9]*" options: 0];
     if (value && ([[value uppercaseString] isEqualToString: self.commandName])) {
         DAssertClass([[self class] tokenWithInterpreter: interpreter], MVPTokenCommand, res);

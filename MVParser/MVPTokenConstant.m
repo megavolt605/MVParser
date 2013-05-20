@@ -19,9 +19,9 @@
 
 - (MVPToken *) interpreter: (MVPInterpreter *) interpreter readFromReader: (MVPReader *) reader {
 
-    [reader skipCharactersInSet: interpreter.language.whiteSpaces];
+    [reader readRegExArray: interpreter.language.whiteSpaces options: 0];
 
-    NSString * value = [reader readRegEx: @"[-+]?([0-9]*\\.[0-9]*|[0-9]+)" options: 0];
+    NSString * value = [reader readRegExArray: interpreter.language.constants options: 0];
     if (value) {
         DAssertClass([[self class] tokenWithInterpreter: interpreter], MVPTokenConstant, res);
         res.value = [MVPValue valueWithString: value];

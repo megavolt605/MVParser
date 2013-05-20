@@ -10,7 +10,7 @@
 #   define DEBUG
 #endif
 
-#define VERBOSE_LOG
+#define VERBOSE_LOG_
 
 // синглтон для обеспечения работы иерархического протокола
 @interface MVTools : NSObject 

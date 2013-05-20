@@ -19,6 +19,7 @@
     MVPToken <MVPTokenStatementProtocol> * prevToken = nil;
     MVPTokenStatement * definition = nil;
     NSUInteger length;
+    NSUInteger separatorLength;
     
     while (flag) {
         [validStatements removeAllObjects];
@@ -27,14 +28,16 @@
             DLog(@"R: %@", reader);
             token = [def interpreter: self readFromReader: reader];
             if (token) {
-                length = token.length + [reader skipCharactersInSet: self.language.whiteSpaces];
-                NSUInteger separatorLength = [self parseEndOfStatementFromReader: reader];
+                [reader readRegExArray: self.language.whiteSpaces options: 0];
+                length = reader.position - reader.lastSavedPosition;
+                separatorLength = [self parseEndOfStatementFromReader: reader];
                 length += separatorLength;
                 if (separatorLength) {
                     definition = def;
                     [validStatements addObject: definition];
                 } else {
                     DLog(@"Missing end of statement sequence.");
+                    DLog(@"R: %@", reader);
                 }
             }
             [reader restorePosition];
@@ -48,28 +51,22 @@
             }
             DAssertPrototol(token, MVPTokenStatementProtocol);
             [_program.statements addObject: res];
-            reader.position += length + 1;
+            reader.position += length;
             prevToken = res;
         } else {
+            [reader readRegExArray: self.language.whiteSpaces options: 0];
             if (!reader.endOfData) {
                 DLog(@"Error!");
+                return false;
             }
-            break;
+            return true;
         }
     }
     return reader.endOfData;
 }
 
 - (NSUInteger) parseEndOfStatementFromReader: (MVPReader *) reader {
-    for (NSString * separator in self.language.statementSeparators) {
-        [reader savePosition];
-        if (![reader endOfData] && ([reader readStringUntilString: separator].length == 0)) {
-            [reader commitPosition];
-            return separator.length;
-        }
-        [reader restorePosition];
-    }
-    return 0;
+    return [reader readRegExArray: self.language.statementSeparators options: 0].length;
 }
 
 #pragma mark -

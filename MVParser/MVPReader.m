@@ -14,102 +14,6 @@
     NSMutableArray * _positionStack;
 }
 
-- (unichar) readCharacter {
-    if ([self endOfData]) {
-        return MVPReaderEndOfData; // признак окончания данных
-    } else {
-        return [_string characterAtIndex: _position++];
-    }
-}
-
-- (NSString *) readStringCharacter {
-    if ([self endOfData]) {
-        return nil; // признак окончания данных
-    } else {
-        return [_string substringWithRange: NSMakeRange(_position++, 1)];
-    }
-}
-
-- (NSString *) readStringWithBlock: (MVPReaderReadStringBlock) block {
-    NSString * c;
-    NSString * currentString = @"";
-    Boolean done = false;
-    Boolean error = false;
-    NSUInteger index = 0;
-    
-    // сохраняем позицию для последующего восстановления если что-то пойдет не так
-    [self savePosition];
-    
-    while (!done && !error) {
-        if ((c = [self readStringCharacter])) {
-            NSString * tempString = [currentString stringByAppendingString: c];
-            done = block(tempString, c, index++, &error);
-            if (!done && !error) {
-                currentString = tempString;
-            }
-        } else {
-            // результат блока нам не важен, так как мы просто
-            // информируем его о том, что данные кончились            
-            block(currentString, nil, index, &error);
-            done = true;
-        }
-    }
-    
-    // если мы не дошли до конца, значит мы "захватили лишний символ",
-    // возвращаем позицию на один символ обратно
-    if (done && !error && c) {
-        [self unread];
-    }
-    
-    if (error || !currentString.length) {
-        // если произошла ошибка, значит нам нужно восстановить позицию на ту,
-        // которую мы запомнили в начале метода и венуть nil
-        [self restorePosition];
-        return nil;
-    } else {
-        // фиксируем текщую позицию и возвращаем накопленную строку
-        [self commitPosition];
-        return [currentString copy];
-    }
-}
-
-// метод, аналогичный предыдущему, но для unichar
-- (NSString *) readCharacterStringWithBlock: (MVPReaderReadCharacterStringBlock) block {
-    unichar c;
-    NSString * currentString = @"";
-    Boolean done = false;
-    Boolean error = false;
-    NSUInteger index = 0;
-    
-    [self savePosition];
-    
-    while (!done && !error) {
-        c = [self readCharacter];
-        if (c != MVPReaderEndOfData) {
-            NSString * tempString = [currentString stringByAppendingFormat: @"%c", c];
-            done = block(tempString, c, index++, &error);
-            if (!done && !error) {
-                currentString = tempString;
-            }
-        } else {
-            block(currentString, MVPReaderEndOfData, index, &error);
-            done = true;
-        }
-    }
-    
-    if (done && !error && (c != MVPReaderEndOfData)) {
-        [self unread];
-    }
-    
-    if (error || !currentString.length) {
-        [self restorePosition];
-        return nil;
-    } else {
-        [self commitPosition];
-        return currentString;
-    }
-}
-
 - (NSString *) readRegEx: (NSString *) pattern options: (NSRegularExpressionOptions) options {
     NSError * e;
     NSRegularExpression * regEx = [NSRegularExpression regularExpressionWithPattern: pattern options: options error: &e];
@@ -118,7 +22,7 @@
                                              options: 0
                                                range: NSMakeRange(self.position, self.string.length - self.position)];
         if (r.length > 0 && r.location == self.position) {
-            DLog(@"Range for %@: %lu, %lu", pattern, r.location, r.length);
+            //DLog(@"Range for %@: %lu, %lu", pattern, r.location, r.length);
             self.position += r.length;
             return [self.string substringWithRange: r];
         } else {
@@ -130,38 +34,30 @@
     }
 }
 
-- (NSString *) readStringUntilCharacter: (unichar) stopCharacter {
-    return [self readCharacterStringWithBlock: ^Boolean(NSString * string, unichar character, NSUInteger characterIndex, Boolean * error) {
-        return character == stopCharacter;
-    }];
+- (NSString *) readRegExArray: (NSArray *) patternArray options: (NSRegularExpressionOptions) options {
+    NSString * res;
+    for (NSString * pattern in patternArray) {
+        [self savePosition];
+        res = [self readRegEx: pattern options: options];
+        if (res.length != 0) {
+            [self commitPosition];
+            return res;
+        }
+        [self restorePosition];
+    }
+    return 0;
 }
 
-- (NSString *) readStringUntilCharacterInString: (NSString *) stopCharacterSet {
-    NSCharacterSet * charSet = [NSCharacterSet characterSetWithCharactersInString: stopCharacterSet];
-    
-    return [self readCharacterStringWithBlock: ^Boolean(NSString * string, unichar character, NSUInteger characterIndex, Boolean * error) {
-        return [charSet characterIsMember: character];
-    }];
-}
-
-- (NSString *) readStringUntilString: (NSString *) stopString {
-    return [self readCharacterStringWithBlock: ^Boolean(NSString * string, unichar character, NSUInteger characterIndex, Boolean * error) {
-        return [string rangeOfString: stopString].length > 0;
-    }];
-}
-
-- (void) unread {
-    --self.position;
+- (NSUInteger) lastSavedPosition {
+    if (_positionStack.count > 0) {
+        return ((NSNumber *)[_positionStack lastObject]).integerValue;
+    } else {
+        return 0;
+    }
 }
 
 - (Boolean) endOfData {
     return (self.position >= _string.length);
-}
-
-- (NSUInteger) skipCharactersInSet: (NSCharacterSet *) characters {
-    return [self readCharacterStringWithBlock: ^Boolean(NSString * string, unichar character, NSUInteger characterIndex, Boolean * error) {
-        return ![characters characterIsMember: character];
-    }].length;
 }
 
 - (void) savePosition {
@@ -179,15 +75,15 @@
 #pragma mark -
 #pragma mark Инициализация
 
-+ (MVPReader *) stringWithString: (NSString *) string {
++ (MVPReader *) readerWithString: (NSString *) string {
     return [[[self class] alloc] initWithString: string];
 }
 
-+ (MVPReader *) stringWithContentsOfFile: (NSString *) filename {
++ (MVPReader *) readerWithContentsOfFile: (NSString *) filename {
     return [[[self class] alloc] initWithContentsOfFile: filename];
 }
 
-+ (MVPReader *) stringWithContentsOfURL: (NSURL *) url {
++ (MVPReader *) readerWithContentsOfURL: (NSURL *) url {
     return [[[self class] alloc] initWithContentsOfURL: url];
 }
 

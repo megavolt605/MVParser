@@ -19,41 +19,14 @@
 
 - (MVPToken *) interpreter: (MVPInterpreter *) interpreter readFromReader: (MVPReader *) reader {
 
-    __block NSString * str;
-    __block Boolean isError = false;
-    __block NSUInteger startPosition = 0;
-    __block NSUInteger length = 0;
-    NSCharacterSet * validChars = [NSCharacterSet characterSetWithCharactersInString: @"_QWERTYUIOPASDFGHJKLZXCVBNMqwertyuiopasdfghjklzxcvbnm0123456789"];
+    [reader readRegExArray: interpreter.language.whiteSpaces options: 0];
 
-    [reader skipCharactersInSet: interpreter.language.whiteSpaces];
-
-    str = [reader readCharacterStringWithBlock: ^Boolean(NSString * string, unichar character, NSUInteger characterIndex, Boolean * error) {
-        Boolean validChar;
-        if (characterIndex == 0) {
-            validChar = character = '$';
-            startPosition = reader.position - 1;
-        } else {
-            validChar = [validChars characterIsMember: character];
-        }
-        if (validChar) {
-            str = string;
-            return false;
-        } else {
-            if (characterIndex == 0) {
-                *error = true;
-                isError = true;
-            } else {
-                length = reader.position - startPosition - 1;
-            }
-            return true;
-        }
-    }];
-    if (str && !isError) {
+    NSString * value = [reader readRegEx: @"$[_a-zA-Z][_a-zA-Z0-9]*" options: 0];
+    if (value) {
         DAssertClass([[self class] tokenWithInterpreter: interpreter], MVPTokenVariable, res);
-        // to-do: поиск переменных по видимости
-        res.variable = [interpreter.program variableWithName: str];
-        res.startPosition = startPosition;
-        res.length = length;
+        res.variable = [interpreter.program variableWithName: value];
+        res.startPosition = reader.position - value.length;
+        res.length = value.length;
         return res;
     } else {
         return nil;

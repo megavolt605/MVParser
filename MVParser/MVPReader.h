@@ -2,7 +2,7 @@
 //  MVPString.h
 //  MVParser
 //
-//  Посимвольная обработка строки
+//  Обработка строки
 //
 
 static const unichar MVPReaderEndOfData = 0;
@@ -12,46 +12,21 @@ typedef Boolean(^MVPReaderReadCharacterStringBlock) (NSString * string, unichar 
 
 @interface MVPReader : NSObject
 
-+ (MVPReader *) stringWithString: (NSString *) string;
-+ (MVPReader *) stringWithContentsOfFile: (NSString *) filename;
-+ (MVPReader *) stringWithContentsOfURL: (NSURL *) url;
++ (MVPReader *) readerWithString: (NSString *) string;
++ (MVPReader *) readerWithContentsOfFile: (NSString *) filename;
++ (MVPReader *) readerWithContentsOfURL: (NSURL *) url;
 
 - (id) initWithString: (NSString *) string;
 - (id) initWithContentsOfFile: (NSString *) filename;
 - (id) initWithContentsOfURL: (NSURL *) url;
 
-// чтение очередного символа
-- (unichar) readCharacter;
-- (NSString *) readStringCharacter;
-
-// чтение набора последоватеьных символов,
-// до тех пор, пока блок возвращает true,
-// или пока не будет достигнут конец строки
-- (NSString *) readStringWithBlock: (MVPReaderReadStringBlock) block;
-- (NSString *) readCharacterStringWithBlock: (MVPReaderReadCharacterStringBlock) block;
-
-// чтение набора последовательных символов,
-// до тех пор пока не встретится указанный символ
-- (NSString *) readStringUntilCharacter: (unichar) stopCharacter;
-
-// чтение набора последовательных символов,
-// до тех пор пока не встретится хотя бы один из символов
-- (NSString *) readStringUntilCharacterInString: (NSString *) stopCharacterSet;
-
-// чтение набора последовательных символов,
-// до тех пор пока не встретится указанный символ
-- (NSString *) readStringUntilString: (NSString *) stopString;
-
 - (NSString *) readRegEx: (NSString *) pattern options: (NSRegularExpressionOptions) options;
+- (NSString *) readRegExArray: (NSArray *) patternArray options: (NSRegularExpressionOptions) options;
 
-// возвращаемся на шаг назад
-- (void) unread;
+- (NSUInteger) lastSavedPosition;
 
 // признак окончания данных
 - (Boolean) endOfData;
-
-// пропустить пустые символы (пробелы, табуляции, перевод строки и т.д.)
-- (NSUInteger) skipCharactersInSet: (NSCharacterSet *) characters;
 
 // сохранить текущую позицию указателя в стеке
 - (void) savePosition;

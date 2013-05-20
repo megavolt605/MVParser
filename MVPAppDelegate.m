@@ -15,7 +15,7 @@
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification
 {
     // Insert code here to initialize your application
-    MVPReader * s = [MVPReader stringWithString: @"print 12.2, 22.33; print 23.3; print 33.4;"];
+    MVPReader * s = [MVPReader readerWithString: @"  print   12.2, \" abc \"  ;   print 23.3; \t print \t 33.4; "];
     
     MVPInterpreter * i = [MVPInterpreter interpreterWithLanguage: [MVPLanguageLogo new]];
     

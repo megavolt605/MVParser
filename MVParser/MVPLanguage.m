@@ -54,12 +54,14 @@
     if (self = [super init]) {
         _definition = [NSMutableArray new];
         
-        _whiteSpaces = [NSCharacterSet whitespaceAndNewlineCharacterSet];
-        _statementSeparators = [NSArray arrayWithObject: @";"];
+        _whiteSpaces = [NSArray arrayWithObject: @"[ \t\n]*"];
+        _statementSeparators = [NSArray arrayWithObject: @"\\;"];
         _singleLineCommentBoundaries = [NSArray arrayWithObject: @"#"];
         _multilineCommentBoundaries = [NSArray arrayWithObjects: @"/*", @"*/", nil];
-        _constantStringBoundaries = [NSArray arrayWithObject: @"\""];
+        _constants = [NSArray arrayWithObjects: @"[-+]?([0-9]*\\.[0-9]*|[0-9]+)", /*@"'.*'"*/
+                      @"(\"(?:[^\"\r\n]*(?:\"\")*[^\"\r\n]*)*?\"(?!\")|\"(?:[^\"\r\n]*(?:"")*[^\"\r\n]*)*?\"(?!\"))\"", nil];
         _commands = [NSArray new];
+
         _reservedWords = [NSArray new];
         
         // операторы указаны в порядке возрастания приоритета выполнения

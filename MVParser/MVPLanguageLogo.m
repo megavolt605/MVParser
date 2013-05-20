@@ -28,7 +28,7 @@
             //!! error
         }
     }
-    DLog(@"%@", [tmp componentsJoinedByString: @" --- "]);
+    DLog(@"%@", [tmp componentsJoinedByString: @""]);
     return command.nextExecutableToken;
 }
 

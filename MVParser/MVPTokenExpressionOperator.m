@@ -16,44 +16,27 @@
 
 - (MVPToken *) interpreter: (MVPInterpreter *) interpreter readFromReader: (MVPReader *) reader {
 
-    __block NSString * str;
-    __block NSUInteger startPosition = 0;
-    __block MVPLanguageExpressionOperator * found = nil;
+    NSString * str;
+    MVPLanguageExpressionOperator * found = nil;
+    NSUInteger startPosiiton = reader.position;
 
     NSMutableArray * operators = [NSMutableArray arrayWithArray: interpreter.language.expressionOperators];
     [operators addObjectsFromArray:interpreter.language.expressionBrackets];
 
-    [reader skipCharactersInSet: interpreter.language.whiteSpaces];
+    [reader readRegExArray: interpreter.language.whiteSpaces options: 0];
 
-    str = [reader readCharacterStringWithBlock: ^Boolean(NSString * string, unichar character, NSUInteger characterIndex, Boolean * error) {
-
-        NSUInteger leftCount = operators.count;
-        if (characterIndex == 0) {
-            startPosition = reader.position;
+    for (MVPLanguageExpressionOperator * operator in operators) {
+        str = [reader readRegEx: operator.name options: NSRegularExpressionCaseInsensitive];
+        if (str) {
+            found = operator;
+            break;
         }
-
-        for (MVPLanguageExpressionOperator * operator in operators) {
-            if ([operator.name isEqualToString: string]) {
-                found = operator;
-                return true;
-            }
-            if (operator.name.length <= str.length) {
-                leftCount--;
-            }
-        }
-
-        if (leftCount == 0) {
-            *error = true;
-            return true;
-        }
-
-        return false;
-    }];
+    }
 
     if (str && found) {
         DAssertClass([[self class] tokenWithInterpreter: interpreter], MVPTokenExpressionOperator, res);
         res.operator = found;
-        res.startPosition = startPosition;
+        res.startPosition = startPosiiton;
         res.length = str.length;
         return res;
     } else {
