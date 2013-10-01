@@ -22,7 +22,7 @@
                                              options: 0
                                                range: NSMakeRange(self.position, self.string.length - self.position)];
         if (r.length > 0 && r.location == self.position) {
-            //DLog(@"Range for %@: %lu, %lu", pattern, r.location, r.length);
+            DLog(@"Range for %@: %lu, %lu", pattern, r.location, r.length);
             self.position += r.length;
             return [self.string substringWithRange: r];
         } else {

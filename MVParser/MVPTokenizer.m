@@ -72,7 +72,7 @@
     }
 
     if (error && !reader.endOfData) {
-        DLog(@"S: %@, error", self);
+        DLog(@"S: %@, error", reader);
     }
 
     DLogLeave();

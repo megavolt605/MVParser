@@ -54,12 +54,16 @@
     if (self = [super init]) {
         _definition = [NSMutableArray new];
         
-        _whiteSpaces = [NSArray arrayWithObject: @"[ \t\n]*"];
+        _whiteSpaces = [NSArray arrayWithObject: @"\\s+"];
         _statementSeparators = [NSArray arrayWithObject: @"\\;"];
         _singleLineCommentBoundaries = [NSArray arrayWithObject: @"#"];
         _multilineCommentBoundaries = [NSArray arrayWithObjects: @"/*", @"*/", nil];
-        _constants = [NSArray arrayWithObjects: @"[-+]?([0-9]*\\.[0-9]*|[0-9]+)", /*@"'.*'"*/
-                      @"(\"(?:[^\"\r\n]*(?:\"\")*[^\"\r\n]*)*?\"(?!\")|\"(?:[^\"\r\n]*(?:"")*[^\"\r\n]*)*?\"(?!\"))\"", nil];
+        _constants = [NSArray arrayWithObjects: @"[-+]?([0-9]*\\.[0-9]*|[0-9]+)",  @"'.*'"
+                      //@"\"([^\"]|(\\\\\"))*\""
+                      //@"(''(?:[^''\r\n]*(?:'''')*[^''\r\n]*)*?''(?!'')|\"(?:[^\"\r\n]*(?:"")*[^\"\r\n]*)*?\"(?!\"))"
+                      //@"(?<=\\').*(?=\\')"
+                      //@"(?<='abc')"
+                      , nil];
         _commands = [NSArray new];
 
         _reservedWords = [NSArray new];
